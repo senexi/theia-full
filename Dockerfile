@@ -127,27 +127,21 @@ RUN apt-get update && apt-get install -y python python-pip && \
     pip install python-language-server;
 
 
-# https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md
-# https://linuxconfig.org/how-to-install-php-composer-on-debian-linux
-RUN curl -s -o composer-setup.php https://getcomposer.org/installer \
-    && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
-    && rm composer-setup.php
-
 #Ruby
-RUN apt-get -y install ruby ruby-dev zlib1g-dev && \
-    gem install solargraph
+#RUN apt-get -y install ruby ruby-dev zlib1g-dev && \
+#    gem install solargraph
 
 
 # Rust
-ENV RUSTUP_HOME=/usr/local/rustup \
-    CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH 
+#ENV RUSTUP_HOME=/usr/local/rustup \
+#    CARGO_HOME=/usr/local/cargo \
+#    PATH=/usr/local/cargo/bin:$PATH 
 
-ENV USER root
+#ENV USER root
 
-RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y \
-    && rustup update \
-    && rustup component add rls rust-src rust-analysis
+#RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y \
+#    && rustup update \
+#    && rustup component add rls rust-src rust-analysis
     
 
 ## User account
@@ -178,6 +172,8 @@ RUN apt-get update && apt-get install -y python build-essential
 USER theia
 ARG version=latest
 WORKDIR /home/theia
+
+RUN git config --global user.email "theia@theiaide.com" && git config --global user.name "theia"
 
 #SDKman
 RUN curl -s "https://get.sdkman.io" | bash
