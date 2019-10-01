@@ -1,0 +1,94 @@
+Kubernetes DEV environment
+___________________
+export NEWUSER=senexi
+adduser $NEWUSER
+passwd $NEWUSER
+usermod -aG wheel $NEWUSER 
+
+mkdir .ssh
+touch authorized_keys
+chmod go-w ~/
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+
+sudo vi /etc/ssh/sshd_config
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+UsePAM no
+PermitRootLogin no
+systemctl reload sshd.service
+
+sudo yum update
+sudo yum install vim wget htop gcc make perl kernel-devel kernel-devel-3.10.0-957.27.2.el7.x86_64
+sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install docker-ce docker-ce-cli containerd.io
+
+sudo yum install --enablerepo="epel" ufw -y
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw enable
+sudo ufw allow from 88.152.129.127 to any port 443
+sudo ufw allow from 171.18.29.130 to any port 443
+
+echo "[Service]\nExecStart=\nExecStart=/usr/bin/dockerd --iptables=false"/etc/systemd/system/docker.service.d/iptables-disabled.conf 
+
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+ln -s k /usr/local/bin/kubectl
+
+minikube config set cpus 6
+minikube config set disk-size 500GB
+minikube config set memory 24576
+
+
+# argo
+sudo curl -sSL -o /usr/local/bin/argo https://github.com/argoproj/argo/releases/download/v2.3.0/argo-linux-amd64
+sudo chmod +x /usr/local/bin/argo
+kubectl create namespace argo
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/install.yaml
+
+# argo cd
+sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v1.2.1/argocd-linux-amd64
+sudo chmod +x /usr/local/bin/argocd
+kubectl create namespace argo
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# minio
+kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-pvc.yaml?raw=true -n minio
+kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-deployment.yaml?raw=true -n minio
+kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-service.yaml?raw=true -n minio
+
+kubectl config set-context --current --namespace=default
+
+____
+#k3s
+curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash
+
+k3d create --volume /opt/k3d/:/storage --publish 443:30102
+export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+k apply -f traefik/traefik_prereqs.yaml
+k apply -f secret-senexum-crt.yaml -n traefik
+k apply -f traefik/deployment_traefik.yaml
+k apply -f theia/theia.yaml
+k apply -f secret-senexum-crt.yaml -n theia
+k apply -f keycloak/keycloak.yaml
+k apply -f secret-senexum-crt.yaml -n keycloak
+k apply -f minio.yaml
+k apply -f secret-senexum-crt.yaml -n minio
+kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-pvc.yaml?raw=true -n minio
+kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-deployment.yaml?raw=true -n minio
+kubectl create -f https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/minio-standalone-service.yaml?raw=true -n minio
+kubectl create namespace argo
+k apply -f secret-senexum-crt.yaml -n argo
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/install.yaml
+k apply -f argo/argo.yaml -n argo
+kubectl -n argo patch secret argocd-secret \
+  -p '{"stringData": {
+    "admin.password": "$2a$10$v.lviMzLiJbTYUeQSxA3ne9qo7/yiOhG9AZFj.Ezc/7bXsEcOwYha",
+    "admin.passwordMtime": "'$(date +%FT%T%Z)'"
+  }}'
