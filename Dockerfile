@@ -1,7 +1,7 @@
-FROM theiaide/theia-full 
+FROM theiaide/theia-full:0.12.0-next.fa116f03 
 USER root
 
-RUN apt-get -y install vim dnsutils traceroute htop jq net-tools netcat nmap nikto pandoc tcpdump iputils-ping postgresql-client protobuf-compiler
+RUN apt-get update && apt-get -y install vim dnsutils traceroute htop jq net-tools netcat nmap nikto pandoc tcpdump iputils-ping postgresql-client protobuf-compiler
 
 RUN curl -sSL -o /usr/local/bin/argo https://github.com/argoproj/argo/releases/download/v2.3.0/argo-linux-amd64 && chmod +x /usr/local/bin/argo
 
@@ -27,8 +27,20 @@ USER theia
 
 RUN echo /home/theia/init/init.sh >> /home/theia/.bashrc
 
-RUN curl -s "https://get.sdkman.io" | bash
+#RUN curl -s "https://get.sdkman.io" | bash
 #RUN /bin/bash -c "source /home/theia/.sdkman/bin/sdkman-init.sh"
 #RUN sdk install java 12.0.1.hs-adpt
-WORKDIR /home/theia
+
+ENV HOME=/home/theia
+WORKDIR ${HOME} 
+USER theia
+
+ENV VIM_BUNDLE=${HOME}/.vim/pack/bundle/start
+RUN git clone https://github.com/fatih/vim-go.git ${VIM_BUNDLE}/vim-go && \
+    git clone https://github.com/vim-airline/vim-airline ${VIM_BUNDLE}/vim-airline && \
+    git clone https://github.com/scrooloose/nerdtree ${VIM_BUNDLE}/nerdtree && \
+    git clone https://github.com/vim-airline/vim-airline-themes ${VIM_BUNDLE}/vim-airline-themes && \
+    git clone https://github.com/raimondi/delimitmate ${VIM_BUNDLE}/delimitmate && \
+    git clone https://github.com/tmhedberg/simpylfold ${VIM_BUNDLE}/simpylfold
+COPY .vimrc ${HOME}
 ENTRYPOINT [ "yarn", "theia", "start", "/home/project", "--hostname=0.0.0.0" ]
