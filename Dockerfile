@@ -48,4 +48,5 @@ RUN git clone https://github.com/fatih/vim-go.git ${VIM_BUNDLE}/vim-go && \
 COPY .vimrc ${HOME}
 
 RUN git clone --depth 1 https://github.com/junegunn/fzf.git ${HOME}/.fzf && ${HOME}/.fzf/install --key-bindings --completion --update-rc
+ENV TERM=xterm-256color
 ENTRYPOINT [ "yarn", "theia", "start", "/home/project", "--hostname=0.0.0.0" ]
