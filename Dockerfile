@@ -37,10 +37,15 @@ USER theia
 
 ENV VIM_BUNDLE=${HOME}/.vim/pack/bundle/start
 RUN git clone https://github.com/fatih/vim-go.git ${VIM_BUNDLE}/vim-go && \
-    git clone https://github.com/vim-airline/vim-airline ${VIM_BUNDLE}/vim-airline && \
-    git clone https://github.com/scrooloose/nerdtree ${VIM_BUNDLE}/nerdtree && \
-    git clone https://github.com/vim-airline/vim-airline-themes ${VIM_BUNDLE}/vim-airline-themes && \
+    git clone https://github.com/itchyny/lightline.vim  ${VIM_BUNDLE}/lightline && \
     git clone https://github.com/raimondi/delimitmate ${VIM_BUNDLE}/delimitmate && \
+    git clone https://github.com/junegunn/fzf.vim ${VIM_BUNDLE}/fzf && \
+    git clone https://github.com/airblade/vim-gitgutter ${VIM_BUNDLE}/vim-gitgutter && \
+    git clone https://github.com/rafi/awesome-vim-colorschemes.git ${VIM_BUNDLE}/colorschemes && \
+    git clone https://github.com/sheerun/vim-polyglot.git ${VIM_BUNDLE}/vim-polyglot && \
+    git clone https://github.com/tpope/vim-fugitive.git ${VIM_BUNDLE}/vim-fugitive && \
     git clone https://github.com/tmhedberg/simpylfold ${VIM_BUNDLE}/simpylfold
 COPY .vimrc ${HOME}
+
+RUN git clone --depth 1 https://github.com/junegunn/fzf.git ${HOME}/.fzf && ${HOME}/.fzf/install --key-bindings --completion --update-rc
 ENTRYPOINT [ "yarn", "theia", "start", "/home/project", "--hostname=0.0.0.0" ]
