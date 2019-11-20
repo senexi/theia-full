@@ -29,7 +29,7 @@ nnoremap <Leader>k :tabnext<CR>
 
 " enable fzf
 set rtp+=~/.fzf
-nnoremap ff :GFiles<CR>
+nnoremap ff :Files<CR>
 " lightline
 set laststatus=2
 set noshowmode
